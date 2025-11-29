@@ -64,7 +64,7 @@ python3 --version
 以下のコマンドを実行して、プロジェクトを作成します。
 
 ```bash
-sam init --runtime python3.12 --dependency-manager pip --app-template hello-world --name powertools-quickstart
+sam init --runtime python3.12
 ```
 
 ディレクトリを移動します。
