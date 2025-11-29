@@ -1,27 +1,236 @@
-# 【AWS】用語を整理しながら学ぶAWS
+# 【AWS】手を動かして学ぶAWS AWS Serverless Application Model(SAM)
 
 ## はじめに
 
-この記事ではAWSが提供するAmazon Neptuneを学習していく内容となっています。
+この記事ではAWS Serverless Application Model(以下、 本文ではSAM)を使って、サーバーレスアプリケーションを開発するチュートリアルを書きます。
 主な内容としては実践したときのメモを中心に書きます。（忘れやすいことなど）
 誤りなどがあれば修正していく想定です。
 
-# 【AWS】手を動かして学ぶ
+## AWS SAMとは
 
-## はじめに
+## ハンズオン
 
-この記事ではMountpoint for Amazon S3(以下、Mountpoint for S3)を使って、EC2にS3バケットをマウントする触る話を書きます。主な内容としては実践したときのメモを中心に書きます。（忘れやすいことなど）
-誤りなどがあれば修正していく想定です。
+おおまかな手順は以下のとおりです。
 
-# 【AWS】検証！AWS Support Automation Workflows（SAW）でEC2を停止する
+- 環境のセットアップ
+- SAMの利用
+- AWS CLIでリソースをみる
 
-## はじめに
-この記事では「この前リリースされた機能って実際に動かすとどんな感じなんだろう」とか「もしかしたら内容次第では使えるかも？？」などAWSサービスの中でも特定の機能にフォーカスして検証していく記事です。
+## セットアップ方法
 
-主な内容としては実践したときのメモを中心に書きます。（忘れやすいことなど）
-誤りなどがあれば書き直していく予定です。
+では、まずは環境をセットアップしていきましょう。
 
-今回はAWS Systems Managerが機能として提供しているAWS Support Automation Workflowsを検証してみます。
+### AWS SAM CLI のインストール
+
+[Install the AWS SAM CLI - AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)に従って、セットアップを行います。
+
+AWS SAM CLIをインストールします。以下のコマンドを実行してください。
+
+```bash
+wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+sudo ./sam-installation/install
+rm -rf aws-sam-cli-linux-x86_64.zip sam-installation
+```
+
+動作確認を行います。
+
+```bash
+sam --version
+```
+
+実行結果
+
+```bash
+SAM CLI, version 1.146.0
+```
+
+## 準備体操：AWS SAMでHello Worldアプリケーションを作成して動作確認
+
+Powertools for AWS Lambda (Python)のチュートリアルに入る前に、AWS SAMでHello Worldアプリケーションを作成して動作確認を行います。
+これからのやることのおおまかな流れは以下のとおりです。
+
+- Pythonのバージョンを確認
+- AWS SAMでHello Worldアプリケーションを作成
+- ローカルでビルドとAPI起動
+
+まずはPythonのバージョンを確認します。
+
+```bash
+python3 --version
+```
+
+今回はPython 3.12.1を使用します。このバージョンを使ってAWS SAMでHello Worldアプリケーションを作成します。
+以下のコマンドを実行して、プロジェクトを作成します。
+
+```bash
+sam init --runtime python3.12 --dependency-manager pip --app-template hello-world --name powertools-quickstart
+```
+
+ディレクトリを移動します。
+
+```bash
+cd powertools-quickstart
+```
+
+ローカルでビルドとAPI起動を行います。
+
+```bash
+sam build && sam local start-api
+```
+
+`http://127.0.0.1:3000/hello`でアクセスします。
+Web画面上に以下のようなメッセージが表示されたら成功です。
+
+```text
+{"message": "hello world"}
+```
+
+curlコマンドでアクセスする場合は以下のとおりです。※ターミナルを次の行で表示するために改行が入るようにしています。
+
+```bash
+curl http://127.0.0.1:3000/hello && echo ""
+```
+
+sam local invokeによる実行も試してみます。以下のコマンドを実行します。
+イベントファイルとリソース指定で実行する例を示します。
+
+```bash
+sam local invoke HelloWorldFunction -e events/event.json
+```
+
+または短縮版で実行することもできます。
+
+```bash
+sam local invoke -e events/event.json
+```
+
+問題なく動作したら、次にデプロイを行います。以下のコマンドを実行します。
+
+```bash
+sam build && sam deploy --guided
+```
+
+いくつか質問が表示されるので、以下のように入力して進めてください。
+
+```
+Setting default arguments for 'sam deploy'
+=========================================
+Stack Name [powertools-quickstart]: 
+AWS Region [ap-northeast-1]: 
+#Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+Confirm changes before deploy [Y/n]: Y
+#SAM needs permission to be able to create roles to connect to the resources in your template
+Allow SAM CLI IAM role creation [Y/n]: Y
+#Preserves the state of previously provisioned resources when an operation fails
+Disable rollback [y/N]: y
+HelloWorldFunction has no authentication. Is this okay? [y/N]: y
+Save arguments to configuration file [Y/n]: y
+SAM configuration file [samconfig.toml]: 
+SAM configuration environment [default]: 
+```
+
+デプロイがはじまるのでしばらく待ちます。途中で`changeset`の確認が表示されるので`Y`を入力して進めてください。
+デプロイが完了したら、以下のようなメッセージが表示されます。
+
+```
+Successfully created/updated stack - powertools-quickstart in ap-northeast-1
+```
+
+デプロイが完了したら、samのコマンドでデプロイしたLambda関数のエンドポイントを確認します。
+
+```bash
+sam list endpoints --output json
+```
+
+実行結果の`CloudEndpoint`という項目でProdとStageのURLが確認できます。
+
+```json
+  {
+    "LogicalResourceId": "ServerlessRestApi",
+    "PhysicalResourceId": "XXXXXXX",
+    "CloudEndpoint": [
+      "https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod",
+      "https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Stage"
+    ],
+    "Methods": [
+      "/hello['get']"
+    ]
+  }
+```
+
+`CloudEndpoint`のURLに`/hello`を付与してアクセスします。ブラウザまたはcurlコマンドでアクセスしてください。
+
+```bash
+curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/hello && echo ""
+```
+
+実行結果
+
+```json
+{"message": "hello world"}
+```
+
+### AWS CLI のインストール
+
+まずはAWS CLIをインストールします。最新版のAWS CLIを公式インストーラーでインストールします。
+
+```bash
+# 1. インストーラーをダウンロード
+curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip"
+
+# 2. unzipがインストールされていない場合はインストール
+sudo apt update && sudo apt install unzip -y  # Ubuntu/Debian系
+# または
+sudo yum install unzip -y                     # CentOS/RHEL系
+
+# 3. ダウンロードしたファイルを展開
+unzip awscliv2.zip
+
+# 4. インストール実行
+sudo ./aws/install
+
+# 5. インストール確認
+aws --version
+
+# ダウンロードしたzipファイルと展開したディレクトリを削除してクリーンアップします。
+rm  "awscliv2.zip"
+
+# 解凍したディレクトリを削除
+rm -rf aws
+```
+
+### AWS CLI の設定
+
+AWS CLIの設定を行います。今回はAWS IAM Identity Center(旧AWS SSO)を使用してログインします。まずは以下のコマンドを実行して、SSOの設定を行います。
+
+```bash
+aws configure sso
+```
+設定時に以下の情報の入力が求められます：
+- **SSO start URL**: 組織のSSO開始URL（例：`https://my-company.awsapps.com/start`）
+- **SSO Region**: SSOが設定されているリージョン（例：`us-east-1`）
+- **アカウント選択**: 利用可能なAWSアカウントから選択
+- **ロール選択**: 選択したアカウントで利用可能なロールから選択
+- **CLI default client Region**: デフォルトのAWSリージョン（例：`ap-northeast-1`）
+- **CLI default output format**: 出力形式（`json`、`text`、`table`のいずれか）
+- **CLI profile name**: プロファイル名（`default`とします。）
+
+SSOの設定が完了したら、以下のコマンドでログインを実行します。
+
+```bash
+aws sso login
+```
+
+### AWS CLI の動作確認
+
+AWS CLIが正しくインストールされ、SSOでログインできているか確認します。AWS STSで認証情報を確認します。
+
+```bash
+aws sts get-caller-identity
+```
+
+## まとめ
 
 ## AWS CLI インストールと SSO ログイン手順 (Linux環境)
 
