@@ -177,6 +177,15 @@ curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/
 
 ## まとめ
 
+## 参考リンク
+
+- [Deploy Lambda durable functions with Infrastructure as Code](https://docs.aws.amazon.com/lambda/latest/dg/durable-getting-started-iac.html)
+- [AWS Lambda announces durable functions for multi-step applications and AI workflows](https://aws.amazon.com/jp/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)
+- [Build multi-step applications and AI workflows with AWS Lambda durable functions](https://aws.amazon.com/jp/blogs/aws/build-multi-step-applications-and-ai-workflows-with-aws-lambda-durable-functions/)
+- [AWS Lambda Durable Functions | Amazon Web Services - YouTube](https://youtu.be/48AfA6vkPVk?si=VB2pLpGGx5Sm8UHz)
+
+# ここから先はAWS CLIのインストールとSSOログイン手順について説明します。
+
 ### AWS CLI のインストール
 
 まずはAWS CLIをインストールします。最新版のAWS CLIを公式インストーラーでインストールします。
