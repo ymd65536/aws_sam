@@ -42,7 +42,7 @@ sam --version
 実行結果
 
 ```bash
-SAM CLI, version 1.146.0
+SAM CLI, version 1.149.0
 ```
 
 ## 準備体操：AWS SAMでHello Worldアプリケーションを作成して動作確認
@@ -50,21 +50,15 @@ SAM CLI, version 1.146.0
 Powertools for AWS Lambda (Python)のチュートリアルに入る前に、AWS SAMでHello Worldアプリケーションを作成して動作確認を行います。
 これからのやることのおおまかな流れは以下のとおりです。
 
-- Pythonのバージョンを確認
 - AWS SAMでHello Worldアプリケーションを作成
 - ローカルでビルドとAPI起動
 
-まずはPythonのバージョンを確認します。
+今回はPython 3.14を使用します。このバージョンを使ってAWS SAMでHello Worldアプリケーションを作成します。
 
-```bash
-python3 --version
-```
-
-今回はPython 3.12.1を使用します。このバージョンを使ってAWS SAMでHello Worldアプリケーションを作成します。
 以下のコマンドを実行して、プロジェクトを作成します。
 
 ```bash
-sam init --runtime python3.12
+sam init --runtime python3.14 --dependency-manager pip --app-template hello-world --name powertools-quickstart
 ```
 
 ディレクトリを移動します。
@@ -76,7 +70,7 @@ cd powertools-quickstart
 ローカルでビルドとAPI起動を行います。
 
 ```bash
-sam build && sam local start-api
+sam build --use-container && sam local start-api
 ```
 
 `http://127.0.0.1:3000/hello`でアクセスします。
@@ -92,6 +86,14 @@ curlコマンドでアクセスする場合は以下のとおりです。※タ�
 curl http://127.0.0.1:3000/hello && echo ""
 ```
 
+### Option: Lambda関数のローカル実行
+
+ディレクトリを移動します。
+
+```bash
+cd powertools-quickstart
+```
+
 sam local invokeによる実行も試してみます。以下のコマンドを実行します。
 イベントファイルとリソース指定で実行する例を示します。
 
@@ -105,10 +107,12 @@ sam local invoke HelloWorldFunction -e events/event.json
 sam local invoke -e events/event.json
 ```
 
+## アプリケーションのデプロイ
+
 問題なく動作したら、次にデプロイを行います。以下のコマンドを実行します。
 
 ```bash
-sam build && sam deploy --guided
+sam build --use-container && sam deploy --guided
 ```
 
 いくつか質問が表示されるので、以下のように入力して進めてください。
@@ -117,7 +121,7 @@ sam build && sam deploy --guided
 Setting default arguments for 'sam deploy'
 =========================================
 Stack Name [powertools-quickstart]: 
-AWS Region [ap-northeast-1]: 
+AWS Region [ap-northeast-1]: us-east-2
 #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
 Confirm changes before deploy [Y/n]: Y
 #SAM needs permission to be able to create roles to connect to the resources in your template
@@ -170,6 +174,8 @@ curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/
 ```json
 {"message": "hello world"}
 ```
+
+## まとめ
 
 ### AWS CLI のインストール
 
@@ -229,8 +235,6 @@ AWS CLIが正しくインストールされ、SSOでログインできている�
 ```bash
 aws sts get-caller-identity
 ```
-
-## まとめ
 
 ## AWS CLI インストールと SSO ログイン手順 (Linux環境)
 
