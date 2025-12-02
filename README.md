@@ -198,13 +198,13 @@ SAM configuration environment [default]:
 デプロイが完了したら、以下のようなメッセージが表示されます。
 
 ```
-Successfully created/updated stack - powertools-quickstart in ap-northeast-1
+Successfully created/updated stack - df-quickstart in us-east-2
 ```
 
 デプロイが完了したら、samのコマンドでデプロイしたLambda関数のエンドポイントを確認します。
 
 ```bash
-sam list endpoints --output json
+sam list endpoints --output json --region us-east-2 --stack-name df-quickstart
 ```
 
 実行結果の`CloudEndpoint`という項目でProdとStageのURLが確認できます。
@@ -235,10 +235,13 @@ curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/
 {"message": "hello world"}
 ```
 
+## Lambda durable functionsを導入する
+
 ## まとめ
 
 ## 参考リンク
 
+- [Lambda durable functions - aws docs](https://docs.aws.amazon.com/lambda/latest/dg/durable-functions.html)
 - [Deploy Lambda durable functions with Infrastructure as Code](https://docs.aws.amazon.com/lambda/latest/dg/durable-getting-started-iac.html)
 - [AWS Lambda announces durable functions for multi-step applications and AI workflows](https://aws.amazon.com/jp/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)
 - [Build multi-step applications and AI workflows with AWS Lambda durable functions](https://aws.amazon.com/jp/blogs/aws/build-multi-step-applications-and-ai-workflows-with-aws-lambda-durable-functions/)
