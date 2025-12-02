@@ -237,6 +237,10 @@ curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/
 
 ## Lambda durable functionsを導入する
 
+```bash
+sam build --use-container && sam deploy --guided
+```
+
 ## まとめ
 
 ## 参考リンク
