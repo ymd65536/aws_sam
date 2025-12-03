@@ -117,7 +117,7 @@ Powertools for AWS Lambda (Python)のチュートリアルに入る前に、AWS 
 以下のコマンドを実行して、プロジェクトを作成します。
 
 ```bash
-sam init --runtime python3.14 --dependency-manager pip --app-template hello-world --name powertools-quickstart
+sam init --runtime python3.12 --dependency-manager pip --app-template hello-world --name powertools-quickstart
 ```
 
 ディレクトリを移動します。
@@ -165,6 +165,50 @@ sam local invoke HelloWorldFunction -e events/event.json
 ```bash
 sam local invoke -e events/event.json
 ```
+
+## validateコマンドでテンプレートの検証
+
+SAMはアプリケーションを実行するapp.pyとSAMテンプレートであるtemplate.yamlで構成されています。
+インフラを変更する場合はtemplate.yamlを修正することで反映が可能ですが、デプロイを実行する前にテンプレートの検証を行うことでミスを防ぐことができます。
+
+では、以下のコマンドを実行してテンプレートの検証を行います。修正前なので問題なく動作するはずです。
+
+```bash
+sam validate
+```
+
+実行結果
+
+```
+/workspaces/aws_sam/powertools-quickstart/template.yaml is a valid SAM Template
+```
+
+問題ないことが確認できたら、template.yamlを修正してみます。
+
+例えば、HelloWorldFunctionのTimeoutを3秒から901秒に変更してみます。
+
+```yaml
+ Globals:
+   Function:
+-    Timeout: 3
++    Timeout: 901
+```
+
+再度、以下のコマンドを実行してテンプレートの検証を行います。
+
+```bash
+sam validate
+```
+
+実行結果
+
+```text
+[[E3034: Check if a number is between min and max] (901 is greater than the maximum of 900) matched 14]
+Error: Linting failed. At least one linting rule was matched to the provided template.
+```
+
+AWS Lamnbda関数のTimeoutの最大値は900秒なので、901秒はエラーとなります。エラーが確認できたら、元の3秒に戻しておきましょう。
+validateを実行することで、ミスを防ぐことができ、デプロイの失敗を防ぐことができるのでデプロイ前には必ず実行することをおすすめします。
 
 ## アプリケーションのデプロイ
 
@@ -235,13 +279,112 @@ curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/
 {"message": "hello world"}
 ```
 
-## Lambda durable functionsを導入する
+## アプリケーションを同期する
+
+SAMはアプリケーションを変更した後は反映のたびにデプロイを実行する必要がありますが、反映のたびにデプロイは時間がかかるため
+SAM CLIのsyncコマンドを使用します。以下のコマンドを実行してアプリケーションを同期します。
 
 ```bash
-sam build --use-container && sam deploy --guided
+sam sync
+```
+
+以下のようなメッセージが表示されたらアプリケーションを修正します。
+
+```text
+CodeTrigger not created as CodeUri or DefinitionUri is missing for ServerlessRestApi.
+```
+
+例えば、`hello_world/app.py`のメッセージを変更してみます。
+
+```python
+import json
+
+
+def lambda_handler(event, context):
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "message": "hello world test",
+            # "location": ip.text.replace("\n", "")
+        }),
+    }
+```
+
+変更して保存を行うと、以下のようなメッセージが表示されます。
+
+```text
+Building codeuri: /workspaces/aws_sam/powertools-quickstart/hello_world runtime: python3.12         
+architecture: x86_64 functions: HelloWorldFunction                                                  
+ Running PythonPipBuilder:CopySource                                                                
+03/Dec/2025:18:26:00: Finished syncing Lambda Function HelloWorldFunction.   
+```
+
+別のターミナルで再度、デプロイしたLambda関数のエンドポイントにアクセスしてみます。
+
+```bash
+curl https://{PhysicalResourceId}.execute-api.ap-northeast-1.amazonaws.com/Prod/hello && echo ""
+```
+
+実行結果
+
+```json
+{"message": "hello world test"}
+```
+
+sam syncコマンドを使用することで、変更を即座に反映できることが確認できました。
+
+## ログの確認
+
+デプロイしたLambda関数のログを確認します。以下のコマンドを実行します。
+
+```bash
+sam logs --stack-name df-quickstart
+```
+
+## スタックを削除する
+
+スタックを削除します。以下のコマンドを実行します。
+
+```bash
+sam delete --stack-name df-quickstart
+```
+
+## Next Step
+
+以上でSAMの基本的な使い方を確認しました。時期が時期なのでre:invent 2025で発表された機能についても触れておきます。
+発表された新機能の一つに`Lambda durable functions`があります。これをSAMでデプロイする方法について説明します。
+
+なお、`sam build --use-container`によるデプロイは今の段階ではできません。
+
+動作環境としては以下のとおりです。
+
+- サポートしている言語
+  - Python 3.13あるいは3.14
+  - JavaScript/TypeScript (Node.js 22/24) 
+
+今回はPythonを使っているので、実装するのであれば、uvやvenvを使ってPython 3.14の仮想環境を作成してから進めるか
+または、Python 3.14がインストールされている環境で進めてください。
+
+ちなみに、今回のハンズオンを実施している環境はUbuntu 22.04でPython 3.12.1がインストールされている環境で検証しています。
+
+Ubuntu 22.04にPython 3.13がインストールされているか確認する場合は以下のコマンドを実行します。
+
+```bash
+sudo apt list | grep python3.13
+```
+
+3.14の場合は以下のコマンドを実行します。
+
+```bash
+sudo apt list | grep python3.14
 ```
 
 ## まとめ
+
+今回はAWS SAMの基本的な使い方を説明しました。SAMを使うことで、サーバーレスアプリケーションの開発が効率的に行えることがわかりました。
+また、re:Invent 2025で発表されたLambda durable functionsについても触れました。
+
+Durable Functionsの検証を進めてみようかなと思いましたが、環境がうまく構築できなかったので、またの機会に検証してみようと思います。
 
 ## 参考リンク
 
