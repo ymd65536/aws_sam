@@ -8,7 +8,18 @@
 
 ## AWS SAMとは
 
+簡単に説明すると、IaCとアプリケーションを両立して開発できるサーバレスアプリケーションのフレームワークです。
+SAMを使うことで、サーバーレスアプリケーションの開発、デプロイ、管理が効率的に行えます。
+
+公式ドキュメントでは以下のように説明されています。
+
+> AWS Serverless Application Model (AWS SAM) は、Infrastructure as Code (IaC) を使用してサーバーレスアプリケーションを構築するためのオープンソースフレームワークです
+
+[引用：AWS Serverless Application Model (AWS SAM) とは - AWS Serverless Application Model](https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/what-is-sam.html)
+
 ## ハンズオン
+
+説明を聞いてもなかなか理解しづらい部分もあると思うので、実際に手を動かしてSAMを使ってみましょう。
 
 おおまかな手順は以下のとおりです。
 
